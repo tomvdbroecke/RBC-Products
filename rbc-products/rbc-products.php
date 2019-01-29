@@ -626,7 +626,7 @@ function product_shortcode($atts) {
 			}
 		} else if ($attributes['language'] == 'nl') {
 			if ($target_product->documentation_nl != NULL) {
-				return '<a href="' . wp_upload_dir()['baseurl'] . '/docs_en/' . $target_product->documentation_nl . '" target="_blank">' . $target_product->product_name . '</a>';
+				return '<a href="' . wp_upload_dir()['baseurl'] . '/docs_nl/' . $target_product->documentation_nl . '" target="_blank">' . $target_product->product_name . '</a>';
 			} else {
 				return '<a href="https://rbcgroupbv.com/product-page-not-available/" target="_blank">' . $target_product->product_name . '</a>';
 			}
