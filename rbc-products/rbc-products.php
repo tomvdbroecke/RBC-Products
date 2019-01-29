@@ -56,6 +56,7 @@ add_action('admin_menu', 'rbcproducts_menu');
 function rbcproducts_menu() {
 	$page_title = "RBC Products";
 	$menu_title = "RBC Products";
+    // BE AWARE: The "edit_products" capability must be manually added to user roles in wordpress before this can be used
 	$capability = "edit_products";
 	$menu_slug = "menu_rbcproducts";
 	$function = "rbcproducts_options";
