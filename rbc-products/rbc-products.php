@@ -500,9 +500,9 @@ function rbcproducts_options() {
 	// Grab database results
 	$table_name = $wpdb->prefix . "rbcproducts";
 	if ($current_search == "") {
-		$db_results = $wpdb->get_results( "SELECT * FROM $table_name" );
+		$db_results = $wpdb->get_results( "SELECT * FROM $table_name ORDER BY product_name ASC" );
 	} else {
-		$db_results = $wpdb->get_results( "SELECT * FROM $table_name WHERE product_name LIKE '%$current_search%'" );
+		$db_results = $wpdb->get_results( "SELECT * FROM $table_name WHERE product_name LIKE '%$current_search%' ORDER BY product_name ASC" );
 	}
 
 	// Populate table with results
