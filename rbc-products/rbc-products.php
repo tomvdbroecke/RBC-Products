@@ -3,7 +3,7 @@
 /*
 Plugin Name:  RBC Products
 Description:  A plugin developed for RBC Group BV for displaying and managing products.
-Version:      0.01
+Version:      1.0
 Author:       Tom van den Broecke
 */
 
