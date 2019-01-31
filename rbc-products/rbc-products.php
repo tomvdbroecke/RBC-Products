@@ -47,6 +47,27 @@ function jal_install () {
 	// Execute SQL
 	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 	dbDelta( $sql );
+
+    // Set name for second table
+	$table_name = $wpdb->prefix . "rbcalerts";
+
+    // SQL for creating table with structure
+	$sql = "CREATE TABLE $table_name (
+		id mediumint(9) NOT NULL AUTO_INCREMENT,
+		alert_message VARCHAR(55),
+		alert_language VARCHAR(55),
+		PRIMARY KEY  (id)
+	) $charset_collate;";
+
+    // Execute SQL
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );
+
+    // Insert alert messages
+    $insert_data = array('alert_message'=>"", 'alert_language'=>"en");
+    $db_upload_result = $wpdb->insert($table_name, $insert_data);
+    $insert_data = array('alert_message'=>"", 'alert_language'=>"nl");
+    $db_upload_result = $wpdb->insert($table_name, $insert_data);
 }
 
 // Register menu function as menu action
@@ -63,6 +84,74 @@ function rbcproducts_menu() {
 	$icon_url = "dashicons-book-alt";
 	$position = 1;
 	add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $function, $icon_url, $position);
+    add_submenu_page( "menu_rbcproducts", "Alerts", "Alerts", $capability, "menu_rbcproducts_alerts", "rbcproducts_alerts" );
+}
+
+// Plugin alerts HTML
+function rbcproducts_alerts() {
+    // Grab WPDB info
+	global $wpdb;
+
+    // Set alert array
+	$alerts = array();
+
+    // Permission check
+	if ( !current_user_can( 'edit_products' ) )  {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+	}
+
+    // Form handling
+    if (isset($_POST['submit_alerts'])) {
+        $table_name = $wpdb->prefix . "rbcalerts";
+
+        // Update EN alert
+        if ($wpdb->update( $table_name, array( 'alert_message' => $_POST['en_alert'] ), array( 'alert_language' => 'en' )) !== false) {
+            array_push($alerts, new Alert("EN alert was updated.", "success"));
+        } else {
+            array_push($alerts, new Alert("EN alert could not be changed.", "error"));
+        }
+
+        // Update NL alert
+        if ($wpdb->update( $table_name, array( 'alert_message' => $_POST['nl_alert'] ), array( 'alert_language' => 'nl' )) !== false) {
+            array_push($alerts, new Alert("NL alert was updated.", "success"));
+        } else {
+            array_push($alerts, new Alert("NL alert could not be changed.", "error"));
+        }
+    }
+
+    // Grab database results
+	$table_name = $wpdb->prefix . "rbcalerts";
+	$db_results = $wpdb->get_results( "SELECT * FROM $table_name" );
+
+    // Prepare alert message variables
+    $en_alert = "";
+    $nl_alert = "";
+
+    // Grab correct variables from database results
+    foreach ( $db_results as $alert ) {
+        if ($alert->alert_language == "en") {
+            $en_alert = $alert->alert_message;
+        }
+        if ($alert->alert_language == "nl") {
+            $nl_alert = $alert->alert_message;
+        }
+    }
+
+    // Alerts menu
+    echo '<div class="wrap">';
+	echo '<h1>Alerts</h1>';
+
+    // Alert messages
+	foreach ($alerts as $alert) {
+		createAlert($alert);
+	}
+
+    echo '<form method="post" action="">';
+    echo '<label><b>NL</b></label><input style="width: 500px;" class="regular-text" type="text" name="nl_alert" value="' . $nl_alert . '"><br>';
+    echo '<label><b>EN</b></label><input style="width: 500px;" class="regular-text" type="text" name="en_alert" value="' . $en_alert . '"><br>';
+    echo '<input style="margin: 5px;" class="button button-primary" type="submit" name="submit_alerts" value="Save">';
+    echo '</form>';
+	echo '</div>';
 }
 
 // Plugin options HTML
@@ -592,6 +681,33 @@ function rbcproducts_options() {
 
 	echo '</div>';
 }
+
+// Alert shortcode function
+function alert_shortcode($atts) {
+    // Set shortcode defaults
+	$attributes = shortcode_atts( array(
+		'language' => 'en',
+	), $atts );
+
+    // Grab WPDB info
+	global $wpdb;
+
+    // Grab alerts from database
+	$table_name = $wpdb->prefix . "rbcalerts";
+	$db_results = $wpdb->get_results( "SELECT * FROM $table_name WHERE alert_language = '" . $attributes['language'] . "'" );
+
+    // Make sure alert isnt NULL
+    $alert = NULL;
+	if ($db_results[0]->alert_message != NULL) {
+        $alert = $db_results[0]->alert_message;
+    }
+
+    // Output correct alert
+    if ($alert != NULL) {
+        echo '<p style="width: 100%; padding: 10px; color: white; background-color: red; border: 1px solid darkred; text-align: center;">' . $alert . '</p>';
+    }
+}
+add_shortcode( 'alert', 'alert_shortcode' );
 
 // Product shortcode function
 function product_shortcode($atts) {
